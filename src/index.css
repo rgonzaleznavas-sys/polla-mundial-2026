@@ -1,0 +1,87 @@
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --c-bg: #f9f9f7;
+  --c-surface: #ffffff;
+  --c-border: #e4e4e0;
+  --c-border-strong: #c8c8c2;
+  --c-text: #1a1a18;
+  --c-text-2: #6b6b65;
+  --c-text-3: #9b9b95;
+  --c-accent: #1a1a18;
+  --c-green: #166534;
+  --c-green-bg: #dcfce7;
+  --c-amber: #92400e;
+  --c-amber-bg: #fef3c7;
+  --c-red: #991b1b;
+  --c-red-bg: #fee2e2;
+  --c-blue: #1e40af;
+  --c-blue-bg: #dbeafe;
+  --radius: 8px;
+  --radius-lg: 12px;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  background: var(--c-bg);
+  color: var(--c-text);
+  font-size: 15px;
+  line-height: 1.5;
+  min-height: 100vh;
+}
+
+input[type="text"], input[type="number"], input[type="password"] {
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius);
+  padding: 8px 12px;
+  font-size: 15px;
+  background: var(--c-surface);
+  color: var(--c-text);
+  outline: none;
+  transition: border-color .15s;
+}
+input:focus { border-color: var(--c-border-strong); }
+input[type="number"] { -moz-appearance: textfield; }
+input[type="number"]::-webkit-inner-spin-button,
+input[type="number"]::-webkit-outer-spin-button { -webkit-appearance: none; }
+
+button {
+  cursor: pointer;
+  font-size: 14px;
+  font-family: inherit;
+  border-radius: var(--radius);
+  border: 1px solid var(--c-border);
+  background: var(--c-surface);
+  color: var(--c-text);
+  padding: 8px 16px;
+  transition: background .15s, border-color .15s;
+}
+button:hover { background: var(--c-bg); border-color: var(--c-border-strong); }
+button.primary {
+  background: var(--c-accent);
+  color: #fff;
+  border-color: var(--c-accent);
+}
+button.primary:hover { opacity: .85; }
+button:disabled { opacity: .45; cursor: not-allowed; }
+
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+}
+.badge-group { background: var(--c-blue-bg); color: var(--c-blue); }
+.badge-open { background: var(--c-green-bg); color: var(--c-green); }
+.badge-closed { background: #f3f4f6; color: var(--c-text-3); }
+.badge-exact { background: var(--c-green-bg); color: var(--c-green); }
+.badge-winner { background: var(--c-amber-bg); color: var(--c-amber); }
+.badge-miss { background: var(--c-red-bg); color: var(--c-red); }
+
+.card {
+  background: var(--c-surface);
+  border: 1px solid var(--c-border);
+  border-radius: var(--radius-lg);
+  padding: 1rem 1.25rem;
+}

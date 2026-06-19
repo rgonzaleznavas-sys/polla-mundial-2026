@@ -79,6 +79,12 @@ export default function App() {
     if (saved) {
       try { setPlayer(JSON.parse(saved)) } catch(e) {}
     }
+    // Genera un ID de dispositivo persistente para evitar múltiples registros
+    let deviceId = localStorage.getItem('polla_device_id')
+    if (!deviceId) {
+      deviceId = 'dev_' + Math.random().toString(36).slice(2) + Date.now().toString(36)
+      localStorage.setItem('polla_device_id', deviceId)
+    }
   }, [])
 
   function handlePlayerReady(p) {
@@ -109,12 +115,6 @@ export default function App() {
         {player && (
           <div style={{ fontSize: 13, color: '#fff', textAlign: 'right', position: 'relative', zIndex: 1 }}>
             👤 {player.name}
-            <br />
-            <button style={{ fontSize: 11, padding: '2px 6px', marginTop: 4, background: 'rgba(255,255,255,0.15)', color: '#fff', borderColor: 'rgba(255,255,255,0.3)' }} onClick={() => {
-              setPlayer(null)
-              localStorage.removeItem('polla_player')
-              setView('leaderboard')
-            }}>Cambiar</button>
           </div>
         )}
       </div>

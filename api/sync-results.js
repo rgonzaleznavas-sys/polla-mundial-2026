@@ -67,7 +67,8 @@ function normalizeTeam(apiName) {
 export default async function handler(req, res) {
   // Protección simple: solo Vercel Cron o llamadas con el secret pueden ejecutar esto
   const authHeader = req.headers['authorization']
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
+  const validSecret = process.env.CRON_SECRET || process.env.VITE_CRON_SECRET
+  if (validSecret && authHeader !== `Bearer ${validSecret}`) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 

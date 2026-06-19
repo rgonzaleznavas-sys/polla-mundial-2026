@@ -13,6 +13,7 @@ Ve a Vercel → tu proyecto → Settings → Environment Variables y agrega:
 | `API_FOOTBALL_KEY` | Tu API key de api-football.com (dashboard → Requests) |
 | `SUPABASE_SERVICE_ROLE_KEY` | Supabase → Settings → API Keys → "Legacy anon, service_role" → service_role (NO la anon, esta es la secreta) |
 | `CRON_SECRET` | Inventa una clave larga y aleatoria, ej: `polla2026_cron_x7k9m2` |
+| `VITE_CRON_SECRET` | Pon el MISMO valor que pusiste en `CRON_SECRET` (este sí se expone al navegador para que el botón "Actualizar ahora" del Admin funcione — es un secreto de bajo riesgo, solo protege contra llamadas accidentales) |
 
 Las variables `VITE_SUPABASE_URL` ya las tienes configuradas — esta función las reutiliza.
 

@@ -57,16 +57,16 @@ export default function App() {
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', padding: '1rem' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-        <div onClick={handleTitleTap} style={{ cursor: 'default', userSelect: 'none' }}>
-          <h1 style={{ fontSize: 20, fontWeight: 600 }}>⚽ Polla Mundial 2026</h1>
-          <p style={{ fontSize: 12, color: 'var(--c-text-2)' }}>Fase de grupos · 72 partidos</p>
+      <div className="header-bar" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div onClick={handleTitleTap} style={{ cursor: 'default', userSelect: 'none', position: 'relative', zIndex: 1 }}>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#fff' }}>⚽ Polla Mundial 2026</h1>
+          <p style={{ fontSize: 12, color: 'rgba(255,255,255,0.85)' }}>Fase de grupos · 72 partidos</p>
         </div>
         {player && (
-          <div style={{ fontSize: 13, color: 'var(--c-text-2)', textAlign: 'right' }}>
+          <div style={{ fontSize: 13, color: '#fff', textAlign: 'right', position: 'relative', zIndex: 1 }}>
             👤 {player.name}
             <br />
-            <button style={{ fontSize: 11, padding: '2px 6px', marginTop: 4 }} onClick={() => {
+            <button style={{ fontSize: 11, padding: '2px 6px', marginTop: 4, background: 'rgba(255,255,255,0.15)', color: '#fff', borderColor: 'rgba(255,255,255,0.3)' }} onClick={() => {
               setPlayer(null)
               localStorage.removeItem('polla_player')
               setView('leaderboard')

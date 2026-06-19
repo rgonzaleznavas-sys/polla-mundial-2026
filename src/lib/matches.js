@@ -93,23 +93,25 @@ export const MATCHES = [
   { id: 72, group: 'K', home: 'RD Congo',        away: 'Uzbekistán',       kickoff: '2026-06-27T19:30:00-04:00', stadium: 'NRG Stadium, Houston' },
 ]
 
-export const TEAM_FLAGS = {
-  'México': '🇲🇽', 'Sudáfrica': '🇿🇦', 'Corea del Sur': '🇰🇷', 'Chequia': '🇨🇿',
-  'Canadá': '🇨🇦', 'Bosnia & Herz.': '🇧🇦', 'Estados Unidos': '🇺🇸', 'Paraguay': '🇵🇾',
-  'Haití': '🇭🇹', 'Escocia': '🏴', 'Australia': '🇦🇺', 'Turquía': '🇹🇷',
-  'Brasil': '🇧🇷', 'Marruecos': '🇲🇦', 'Catar': '🇶🇦', 'Suiza': '🇨🇭',
-  'Costa de Marfil': '🇨🇮', 'Ecuador': '🇪🇨', 'Alemania': '🇩🇪', 'Curazao': '🇨🇼',
-  'Países Bajos': '🇳🇱', 'Japón': '🇯🇵', 'Suecia': '🇸🇪', 'Túnez': '🇹🇳',
-  'Arabia Saudita': '🇸🇦', 'Uruguay': '🇺🇾', 'España': '🇪🇸', 'Cabo Verde': '🇨🇻',
-  'Irán': '🇮🇷', 'Nueva Zelanda': '🇳🇿', 'Bélgica': '🇧🇪', 'Egipto': '🇪🇬',
-  'Francia': '🇫🇷', 'Senegal': '🇸🇳', 'Irak': '🇮🇶', 'Noruega': '🇳🇴',
-  'Argentina': '🇦🇷', 'Argelia': '🇩🇿', 'Austria': '🇦🇹', 'Jordania': '🇯🇴',
-  'Ghana': '🇬🇭', 'Panamá': '🇵🇦', 'Inglaterra': '🏴', 'Croacia': '🇭🇷',
-  'Portugal': '🇵🇹', 'RD Congo': '🇨🇩', 'Uzbekistán': '🇺🇿', 'Colombia': '🇨🇴',
+export const TEAM_FLAG_CODES = {
+  'México': 'mx', 'Sudáfrica': 'za', 'Corea del Sur': 'kr', 'Chequia': 'cz',
+  'Canadá': 'ca', 'Bosnia & Herz.': 'ba', 'Estados Unidos': 'us', 'Paraguay': 'py',
+  'Haití': 'ht', 'Escocia': 'gb-sct', 'Australia': 'au', 'Turquía': 'tr',
+  'Brasil': 'br', 'Marruecos': 'ma', 'Catar': 'qa', 'Suiza': 'ch',
+  'Costa de Marfil': 'ci', 'Ecuador': 'ec', 'Alemania': 'de', 'Curazao': 'cw',
+  'Países Bajos': 'nl', 'Japón': 'jp', 'Suecia': 'se', 'Túnez': 'tn',
+  'Arabia Saudita': 'sa', 'Uruguay': 'uy', 'España': 'es', 'Cabo Verde': 'cv',
+  'Irán': 'ir', 'Nueva Zelanda': 'nz', 'Bélgica': 'be', 'Egipto': 'eg',
+  'Francia': 'fr', 'Senegal': 'sn', 'Irak': 'iq', 'Noruega': 'no',
+  'Argentina': 'ar', 'Argelia': 'dz', 'Austria': 'at', 'Jordania': 'jo',
+  'Ghana': 'gh', 'Panamá': 'pa', 'Inglaterra': 'gb-eng', 'Croacia': 'hr',
+  'Portugal': 'pt', 'RD Congo': 'cd', 'Uzbekistán': 'uz', 'Colombia': 'co',
 }
 
-export function flagFor(team) {
-  return TEAM_FLAGS[team] || '🏳️'
+export function flagUrl(team, size = 24) {
+  const code = TEAM_FLAG_CODES[team]
+  if (!code) return null
+  return `https://flagcdn.com/w${size}/${code}.png`
 }
 
 export function isOpen(match) {

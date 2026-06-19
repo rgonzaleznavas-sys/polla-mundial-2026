@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { MATCHES, calcPoints, flagFor } from '../lib/matches'
+import { MATCHES, calcPoints } from '../lib/matches'
+import Flag from '../components/Flag'
 
 export default function Leaderboard() {
   const [players, setPlayers] = useState([])
@@ -110,8 +111,8 @@ export default function Leaderboard() {
           <div style={{ fontSize: 11, color: 'var(--c-text-3)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.04em' }}>
             Último resultado
           </div>
-          <div style={{ fontSize: 14, fontWeight: 600 }}>
-            {lastResultMatch.home} {flagFor(lastResultMatch.home)} {results[lastResultMatch.id].home_score} – {results[lastResultMatch.id].away_score} {flagFor(lastResultMatch.away)} {lastResultMatch.away}
+          <div style={{ fontSize: 14, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap' }}>
+            {lastResultMatch.home} <Flag team={lastResultMatch.home} /> {results[lastResultMatch.id].home_score} – {results[lastResultMatch.id].away_score} <Flag team={lastResultMatch.away} /> {lastResultMatch.away}
           </div>
           {results[lastResultMatch.id].scorers && (
             <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 2 }}>

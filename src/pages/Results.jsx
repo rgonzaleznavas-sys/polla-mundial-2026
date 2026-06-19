@@ -1,18 +1,28 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { MATCHES, formatKickoff, flagFor } from '../lib/matches'
+import { MATCHES, formatKickoff, isOpen, calcPoints } from '../lib/matches'
+import Flag from '../components/Flag'
 
 export default function Results() {
   const [results, setResults] = useState({})
   const [loading, setLoading] = useState(true)
   const [liveFlash, setLiveFlash] = useState(false)
+  const [expanded, setExpanded] = useState(null)
+  const [allPicks, setAllPicks] = useState([])
+  const [players, setPlayers] = useState([])
 
   const loadResults = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true)
-    const { data } = await supabase.from('results').select('match_id, home_score, away_score, scorers')
+    const [{ data: res }, { data: picks }, { data: pls }] = await Promise.all([
+      supabase.from('results').select('match_id, home_score, away_score, scorers'),
+      supabase.from('picks').select('player_id, match_id, home_score, away_score'),
+      supabase.from('players').select('id, name'),
+    ])
     const rMap = {}
-    ;(data || []).forEach(r => { rMap[r.match_id] = r })
+    ;(res || []).forEach(r => { rMap[r.match_id] = r })
     setResults(rMap)
+    setAllPicks(picks || [])
+    setPlayers(pls || [])
     setLoading(false)
   }, [])
 
@@ -41,6 +51,10 @@ export default function Results() {
 
   const playedCount = Object.keys(results).length
 
+  function playerName(id) {
+    return players.find(p => p.id === id)?.name || '?'
+  }
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
@@ -65,10 +79,13 @@ export default function Results() {
             }}>{label}</div>
             {matchesWithResults.map(m => {
               const r = results[m.id]
+              const closed = !isOpen(m)
+              const isExpanded = expanded === m.id
+              const matchPicks = allPicks.filter(p => p.match_id === m.id)
               return (
                 <div key={m.id} className="card" style={{ marginBottom: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, textAlign: 'right' }}>{m.home} {flagFor(m.home)}</span>
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>{m.home} <Flag team={m.home} /></span>
                     <div style={{
                       display: 'flex', alignItems: 'center', gap: 6,
                       fontSize: 17, fontWeight: 700, padding: '4px 12px',
@@ -78,7 +95,7 @@ export default function Results() {
                       <span style={{ color: 'var(--c-text-3)', fontSize: 13 }}>–</span>
                       <span>{r.away_score}</span>
                     </div>
-                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{flagFor(m.away)} {m.away}</span>
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}><Flag team={m.away} /> {m.away}</span>
                   </div>
                   {r.scorers && (
                     <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 8, textAlign: 'center' }}>
@@ -88,6 +105,39 @@ export default function Results() {
                   <div style={{ fontSize: 11, color: 'var(--c-text-3)', marginTop: 6, textAlign: 'center' }}>
                     Grupo {m.group} · {m.stadium} · {formatKickoff(m.kickoff)}
                   </div>
+
+                  {closed && matchPicks.length > 0 && (
+                    <div style={{ marginTop: 8, textAlign: 'center' }}>
+                      <button
+                        onClick={() => setExpanded(isExpanded ? null : m.id)}
+                        style={{ fontSize: 11, padding: '4px 10px' }}
+                      >
+                        {isExpanded ? '▲ Ocultar pronósticos' : `▼ Ver pronósticos (${matchPicks.length})`}
+                      </button>
+                    </div>
+                  )}
+
+                  {closed && isExpanded && (
+                    <div style={{ marginTop: 8, borderTop: '1px solid var(--c-border)', paddingTop: 8 }}>
+                      {matchPicks
+                        .slice()
+                        .sort((a, b) => calcPoints(b, r) - calcPoints(a, r))
+                        .map(p => {
+                          const pts = calcPoints(p, r)
+                          return (
+                            <div key={p.player_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, padding: '4px 4px' }}>
+                              <span style={{ color: 'var(--c-text-2)' }}>{playerName(p.player_id)}</span>
+                              <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                <span style={{ fontWeight: 600 }}>{p.home_score}–{p.away_score}</span>
+                                <span className={`badge ${pts >= 3 ? 'badge-exact' : pts === 1 ? 'badge-winner' : 'badge-miss'}`} style={{ fontSize: 10 }}>
+                                  {pts >= 3 ? `+${pts}` : pts === 1 ? '+1' : '0'}
+                                </span>
+                              </span>
+                            </div>
+                          )
+                        })}
+                    </div>
+                  )}
                 </div>
               )
             })}

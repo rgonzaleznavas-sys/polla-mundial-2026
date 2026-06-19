@@ -63,6 +63,15 @@ export default function Leaderboard() {
     setTimeout(() => setLiveFlash(false), 2000)
   }
 
+  function formatLiveTime(status) {
+    if (!status) return ''
+    const s = String(status).toLowerCase()
+    if (s === 'halftime' || s === 'ht') return 'Medio tiempo'
+    if (s === 'fulltime' || s === 'finished') return 'Final'
+    if (/^\d+(\+\d+)?$/.test(s)) return `${s}'`
+    return status
+  }
+
   if (loading) return <p style={{ color: 'var(--c-text-2)', padding: '1rem 0' }}>Cargando tabla...</p>
   if (!players.length) return (
     <div className="card">
@@ -120,12 +129,18 @@ export default function Leaderboard() {
                 display: 'flex', alignItems: 'center', justifyContent: 'space-between',
                 padding: '6px 0',
                 borderTop: idx > 0 ? '1px solid var(--c-border)' : 'none',
+                gap: 6,
               }}>
                 <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
                   <Flag team={m.home} size={16} /> {m.home}
                 </div>
-                <div style={{ fontSize: 14, fontWeight: 700, padding: '2px 10px', background: 'var(--c-red-bg)', borderRadius: 6 }}>
-                  {results[m.id].home_score} – {results[m.id].away_score}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, padding: '2px 10px', background: 'var(--c-red-bg)', borderRadius: 6 }}>
+                    {results[m.id].home_score} – {results[m.id].away_score}
+                  </div>
+                  <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-red)' }}>
+                    {formatLiveTime(results[m.id].live_status)}
+                  </span>
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
                   {m.away} <Flag team={m.away} size={16} />

@@ -42,6 +42,15 @@ export default function Results() {
 
   if (loading) return <p style={{ color: 'var(--c-text-2)', padding: '1rem 0' }}>Cargando resultados...</p>
 
+  function formatLiveTime(status) {
+    if (!status) return ''
+    const s = String(status).toLowerCase()
+    if (s === 'halftime' || s === 'ht') return 'Medio tiempo'
+    if (s === 'fulltime' || s === 'finished') return 'Final'
+    if (/^\d+(\+\d+)?$/.test(s)) return `${s}'`
+    return status
+  }
+
   const byDate = {}
   MATCHES.forEach(m => {
     const date = m.kickoff.slice(0, 10)
@@ -85,9 +94,12 @@ export default function Results() {
                   borderTop: idx > 0 ? '1px solid var(--c-border)' : 'none',
                 }}>
                   <span style={{ flex: 1, fontSize: 13, fontWeight: 500, textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>{m.home} <Flag team={m.home} size={16} /></span>
-                  <span style={{ fontSize: 16, fontWeight: 700, padding: '2px 10px', background: 'var(--c-red-bg)', borderRadius: 6 }}>
-                    {r.home_score} – {r.away_score}
-                  </span>
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2 }}>
+                    <span style={{ fontSize: 16, fontWeight: 700, padding: '2px 10px', background: 'var(--c-red-bg)', borderRadius: 6 }}>
+                      {r.home_score} – {r.away_score}
+                    </span>
+                    <span style={{ fontSize: 10, fontWeight: 700, color: 'var(--c-red)' }}>{formatLiveTime(r.live_status)}</span>
+                  </div>
                   <span style={{ flex: 1, fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}><Flag team={m.away} size={16} /> {m.away}</span>
                 </div>
               )
@@ -132,7 +144,7 @@ export default function Results() {
                       {r.live_status && (
                         <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--c-red)', display: 'flex', alignItems: 'center', gap: 3 }}>
                           <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--c-red)', display: 'inline-block' }}></span>
-                          EN VIVO
+                          {formatLiveTime(r.live_status)}
                         </span>
                       )}
                     </div>

@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { MATCHES, formatKickoff } from '../lib/matches'
+import { MATCHES, formatKickoff, flagFor } from '../lib/matches'
 
 export default function Results() {
   const [results, setResults] = useState({})
@@ -68,7 +68,7 @@ export default function Results() {
               return (
                 <div key={m.id} className="card" style={{ marginBottom: 6 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, textAlign: 'right' }}>{m.home}</span>
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, textAlign: 'right' }}>{m.home} {flagFor(m.home)}</span>
                     <div style={{
                       display: 'flex', alignItems: 'center', gap: 6,
                       fontSize: 17, fontWeight: 700, padding: '4px 12px',
@@ -78,7 +78,7 @@ export default function Results() {
                       <span style={{ color: 'var(--c-text-3)', fontSize: 13 }}>–</span>
                       <span>{r.away_score}</span>
                     </div>
-                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{m.away}</span>
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{flagFor(m.away)} {m.away}</span>
                   </div>
                   {r.scorers && (
                     <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 8, textAlign: 'center' }}>

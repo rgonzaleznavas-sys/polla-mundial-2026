@@ -93,6 +93,25 @@ export const MATCHES = [
   { id: 72, group: 'K', home: 'RD Congo',        away: 'Uzbekistán',       kickoff: '2026-06-27T19:30:00-04:00', stadium: 'NRG Stadium, Houston' },
 ]
 
+export const TEAM_FLAGS = {
+  'México': '🇲🇽', 'Sudáfrica': '🇿🇦', 'Corea del Sur': '🇰🇷', 'Chequia': '🇨🇿',
+  'Canadá': '🇨🇦', 'Bosnia & Herz.': '🇧🇦', 'Estados Unidos': '🇺🇸', 'Paraguay': '🇵🇾',
+  'Haití': '🇭🇹', 'Escocia': '🏴', 'Australia': '🇦🇺', 'Turquía': '🇹🇷',
+  'Brasil': '🇧🇷', 'Marruecos': '🇲🇦', 'Catar': '🇶🇦', 'Suiza': '🇨🇭',
+  'Costa de Marfil': '🇨🇮', 'Ecuador': '🇪🇨', 'Alemania': '🇩🇪', 'Curazao': '🇨🇼',
+  'Países Bajos': '🇳🇱', 'Japón': '🇯🇵', 'Suecia': '🇸🇪', 'Túnez': '🇹🇳',
+  'Arabia Saudita': '🇸🇦', 'Uruguay': '🇺🇾', 'España': '🇪🇸', 'Cabo Verde': '🇨🇻',
+  'Irán': '🇮🇷', 'Nueva Zelanda': '🇳🇿', 'Bélgica': '🇧🇪', 'Egipto': '🇪🇬',
+  'Francia': '🇫🇷', 'Senegal': '🇸🇳', 'Irak': '🇮🇶', 'Noruega': '🇳🇴',
+  'Argentina': '🇦🇷', 'Argelia': '🇩🇿', 'Austria': '🇦🇹', 'Jordania': '🇯🇴',
+  'Ghana': '🇬🇭', 'Panamá': '🇵🇦', 'Inglaterra': '🏴', 'Croacia': '🇭🇷',
+  'Portugal': '🇵🇹', 'RD Congo': '🇨🇩', 'Uzbekistán': '🇺🇿', 'Colombia': '🇨🇴',
+}
+
+export function flagFor(team) {
+  return TEAM_FLAGS[team] || '🏳️'
+}
+
 export function isOpen(match) {
   return new Date() < new Date(match.kickoff)
 }

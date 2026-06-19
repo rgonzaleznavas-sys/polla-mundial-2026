@@ -14,6 +14,21 @@ export default function App() {
   const [adminInput, setAdminInput] = useState('')
   const [adminError, setAdminError] = useState('')
   const [showAdminLogin, setShowAdminLogin] = useState(false)
+  const [tapCount, setTapCount] = useState(0)
+  const [tapTimer, setTapTimer] = useState(null)
+
+  function handleTitleTap() {
+    const newCount = tapCount + 1
+    setTapCount(newCount)
+    if (tapTimer) clearTimeout(tapTimer)
+    if (newCount >= 3) {
+      setShowAdminLogin(true)
+      setTapCount(0)
+      return
+    }
+    const t = setTimeout(() => setTapCount(0), 600)
+    setTapTimer(t)
+  }
 
   useEffect(() => {
     const saved = localStorage.getItem('polla_player')
@@ -43,7 +58,7 @@ export default function App() {
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', padding: '1rem' }}>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-        <div>
+        <div onClick={handleTitleTap} style={{ cursor: 'default', userSelect: 'none' }}>
           <h1 style={{ fontSize: 20, fontWeight: 600 }}>⚽ Polla Mundial 2026</h1>
           <p style={{ fontSize: 12, color: 'var(--c-text-2)' }}>Fase de grupos · 72 partidos</p>
         </div>
@@ -76,12 +91,6 @@ export default function App() {
           }}>{label}</button>
         ))}
         <div style={{ flex: 1 }} />
-        {!adminMode && (
-          <button onClick={() => setShowAdminLogin(v => !v)} style={{
-            fontSize: 11, color: 'var(--c-text-3)', border: 'none',
-            background: 'none', padding: '4px 8px',
-          }}>Admin</button>
-        )}
       </div>
 
       {showAdminLogin && !adminMode && (

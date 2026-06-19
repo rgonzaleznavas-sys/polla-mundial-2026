@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
-import { MATCHES, isOpen, formatKickoff, calcPoints } from '../lib/matches'
+import { MATCHES, isOpen, formatKickoff, calcPoints, flagFor } from '../lib/matches'
 
 export default function Picks({ player }) {
   const [picks, setPicks] = useState({})
@@ -85,7 +85,7 @@ export default function Picks({ player }) {
               return (
                 <div key={m.id} className="card" style={{ marginBottom: 6, opacity: !open && !result ? .65 : 1 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, textAlign: 'right' }}>{m.home}</span>
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500, textAlign: 'right' }}>{m.home} {flagFor(m.home)}</span>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 4 }}>
                       <input
                         type="number" min="0" max="20"
@@ -103,7 +103,7 @@ export default function Picks({ player }) {
                         style={{ width: 38, textAlign: 'center', padding: '6px 4px', fontSize: 15, fontWeight: 600 }}
                       />
                     </div>
-                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{m.away}</span>
+                    <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{flagFor(m.away)} {m.away}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
                     <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>

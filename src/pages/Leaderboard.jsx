@@ -15,7 +15,7 @@ export default function Leaderboard() {
     const [{ data: pls }, { data: pks }, { data: res }] = await Promise.all([
       supabase.from('players').select('id, name').order('created_at'),
       supabase.from('picks').select('player_id, match_id, home_score, away_score'),
-      supabase.from('results').select('match_id, home_score, away_score, scorers'),
+      supabase.from('results').select('match_id, home_score, away_score, scorers, live_status'),
     ])
     setPlayers(pls || [])
     setPicks(pks || [])

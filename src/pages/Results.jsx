@@ -14,7 +14,7 @@ export default function Results() {
   const loadResults = useCallback(async (showLoading = true) => {
     if (showLoading) setLoading(true)
     const [{ data: res }, { data: picks }, { data: pls }] = await Promise.all([
-      supabase.from('results').select('match_id, home_score, away_score, scorers'),
+      supabase.from('results').select('match_id, home_score, away_score, scorers, live_status'),
       supabase.from('picks').select('player_id, match_id, home_score, away_score'),
       supabase.from('players').select('id, name'),
     ])
@@ -50,6 +50,7 @@ export default function Results() {
   })
 
   const playedCount = Object.keys(results).length
+  const liveMatches = MATCHES.filter(m => results[m.id]?.live_status)
 
   function playerName(id) {
     return players.find(p => p.id === id)?.name || '?'
@@ -64,6 +65,36 @@ export default function Results() {
         </p>
         <span className="badge badge-group">{playedCount}/72 jugados</span>
       </div>
+
+      {liveMatches.length > 0 && (
+        <div style={{ marginBottom: '1.25rem' }}>
+          <div style={{
+            fontSize: 12, fontWeight: 700, color: '#fff',
+            background: 'var(--c-red)', padding: '6px 12px', borderRadius: '8px 8px 0 0',
+            display: 'flex', alignItems: 'center', gap: 6,
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', display: 'inline-block' }}></span>
+            EN VIVO AHORA
+          </div>
+          <div className="card" style={{ borderRadius: '0 0 12px 12px' }}>
+            {liveMatches.map((m, idx) => {
+              const r = results[m.id]
+              return (
+                <div key={m.id} style={{
+                  display: 'flex', alignItems: 'center', gap: 8, padding: '8px 0',
+                  borderTop: idx > 0 ? '1px solid var(--c-border)' : 'none',
+                }}>
+                  <span style={{ flex: 1, fontSize: 13, fontWeight: 500, textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 5 }}>{m.home} <Flag team={m.home} size={16} /></span>
+                  <span style={{ fontSize: 16, fontWeight: 700, padding: '2px 10px', background: 'var(--c-red-bg)', borderRadius: 6 }}>
+                    {r.home_score} – {r.away_score}
+                  </span>
+                  <span style={{ flex: 1, fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}><Flag team={m.away} size={16} /> {m.away}</span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
 
       {Object.entries(byDate).map(([date, matches]) => {
         const matchesWithResults = matches.filter(m => results[m.id])
@@ -87,13 +118,23 @@ export default function Results() {
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                     <span style={{ flex: 1, fontSize: 14, fontWeight: 500, textAlign: 'right', display: 'flex', alignItems: 'center', justifyContent: 'flex-end', gap: 6 }}>{m.home} <Flag team={m.home} /></span>
                     <div style={{
-                      display: 'flex', alignItems: 'center', gap: 6,
-                      fontSize: 17, fontWeight: 700, padding: '4px 12px',
-                      background: 'var(--c-bg)', borderRadius: 8, minWidth: 64, justifyContent: 'center',
+                      display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 2,
                     }}>
-                      <span>{r.home_score}</span>
-                      <span style={{ color: 'var(--c-text-3)', fontSize: 13 }}>–</span>
-                      <span>{r.away_score}</span>
+                      <div style={{
+                        display: 'flex', alignItems: 'center', gap: 6,
+                        fontSize: 17, fontWeight: 700, padding: '4px 12px',
+                        background: r.live_status ? 'var(--c-red-bg)' : 'var(--c-bg)', borderRadius: 8, minWidth: 64, justifyContent: 'center',
+                      }}>
+                        <span>{r.home_score}</span>
+                        <span style={{ color: 'var(--c-text-3)', fontSize: 13 }}>–</span>
+                        <span>{r.away_score}</span>
+                      </div>
+                      {r.live_status && (
+                        <span style={{ fontSize: 9, fontWeight: 700, color: 'var(--c-red)', display: 'flex', alignItems: 'center', gap: 3 }}>
+                          <span style={{ width: 5, height: 5, borderRadius: '50%', background: 'var(--c-red)', display: 'inline-block' }}></span>
+                          EN VIVO
+                        </span>
+                      )}
                     </div>
                     <span style={{ flex: 1, fontSize: 14, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 6 }}><Flag team={m.away} /> {m.away}</span>
                   </div>

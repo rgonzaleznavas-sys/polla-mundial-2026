@@ -1,24 +1,24 @@
 // /api/sync-results.js
-// Consulta el dataset público y gratuito de openfootball/worldcup.json
-// (no requiere API key) y actualiza Supabase con los resultados reales.
-// Se ejecuta automáticamente vía Vercel Cron, o manualmente desde el botón
-// "Actualizar ahora" en el panel Admin.
+// Consulta worldcup26.ir (gratis, sin API key) que incluye marcador EN VIVO
+// (time_elapsed) además de resultados finales, y actualiza Supabase.
+// Se ejecuta automáticamente vía Vercel Cron, el auto-sync del frontend (cada 20s),
+// o manualmente desde el botón "Actualizar ahora" en el panel Admin.
 
 import { createClient } from '@supabase/supabase-js'
 
-const WORLDCUP_JSON_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json'
+const TEAMS_URL = 'https://worldcup26.ir/get/teams'
+const GAMES_URL = 'https://worldcup26.ir/get/games'
 
-// Mapeo de nombres de equipo del dataset (en inglés) -> nombres usados en la app
+// Mapeo de nombres en inglés (worldcup26.ir) -> nombres usados en la app
 const TEAM_NAME_MAP = {
   'Mexico': 'México',
   'South Africa': 'Sudáfrica',
   'South Korea': 'Corea del Sur',
   'Czech Republic': 'Chequia',
   'Canada': 'Canadá',
-  'Bosnia & Herzegovina': 'Bosnia & Herz.',
   'Bosnia and Herzegovina': 'Bosnia & Herz.',
-  'USA': 'Estados Unidos',
   'United States': 'Estados Unidos',
+  'USA': 'Estados Unidos',
   'Paraguay': 'Paraguay',
   'Haiti': 'Haití',
   'Scotland': 'Escocia',
@@ -29,11 +29,10 @@ const TEAM_NAME_MAP = {
   'Qatar': 'Catar',
   'Switzerland': 'Suiza',
   'Ivory Coast': 'Costa de Marfil',
-  "Côte d'Ivoire": 'Costa de Marfil',
   'Ecuador': 'Ecuador',
   'Germany': 'Alemania',
-  'Curacao': 'Curazao',
   'Curaçao': 'Curazao',
+  'Curacao': 'Curazao',
   'Netherlands': 'Países Bajos',
   'Japan': 'Japón',
   'Sweden': 'Suecia',
@@ -59,8 +58,8 @@ const TEAM_NAME_MAP = {
   'England': 'Inglaterra',
   'Croatia': 'Croacia',
   'Portugal': 'Portugal',
+  'Democratic Republic of the Congo': 'RD Congo',
   'DR Congo': 'RD Congo',
-  'Congo DR': 'RD Congo',
   'Uzbekistan': 'Uzbekistán',
   'Colombia': 'Colombia',
 }
@@ -86,41 +85,74 @@ export default async function handler(req, res) {
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
   try {
-    const dataRes = await fetch(WORLDCUP_JSON_URL)
-    if (!dataRes.ok) {
-      const text = await dataRes.text()
-      return res.status(502).json({ error: 'openfootball request failed', detail: text })
+    const [teamsRes, gamesRes] = await Promise.all([
+      fetch(TEAMS_URL),
+      fetch(GAMES_URL),
+    ])
+
+    if (!teamsRes.ok || !gamesRes.ok) {
+      return res.status(502).json({ error: 'worldcup26.ir request failed' })
     }
-    const data = await dataRes.json()
-    const allMatches = data.matches || []
+
+    const teamsData = await teamsRes.json()
+    const gamesData = await gamesRes.json()
+
+    const teams = teamsData.teams || []
+    const games = gamesData.games || gamesData.matches || []
+
+    // Mapa id de equipo -> nombre normalizado
+    const teamById = {}
+    teams.forEach(t => { teamById[t.id] = normalizeTeam(t.name_en) })
 
     const { MATCHES } = await import('../src/lib/matches.js')
 
     let updated = 0
+    let liveCount = 0
     const errors = []
 
-    for (const match of allMatches) {
-      if (!match.score || !match.score.ft) continue
+    for (const game of games) {
+      const homeId = game.home_team_id
+      const awayId = game.away_team_id
+      if (!homeId || !awayId || homeId === '0' || awayId === '0') continue
 
-      const homeApi = normalizeTeam(match.team1)
-      const awayApi = normalizeTeam(match.team2)
-      const [homeGoals, awayGoals] = match.score.ft
+      const homeName = teamById[homeId]
+      const awayName = teamById[awayId]
+      if (!homeName || !awayName) continue
 
-      const localMatch = MATCHES.find(m => m.home === homeApi && m.away === awayApi)
+      const localMatch = MATCHES.find(m => m.home === homeName && m.away === awayName)
       if (!localMatch) continue
 
+      const isLive = game.time_elapsed && game.time_elapsed !== 'notstarted' && game.time_elapsed !== 'finished'
+      const isFinished = game.finished === true || game.finished === 'TRUE'
+      const hasScore = game.home_score !== null && game.home_score !== undefined && game.home_score !== ''
+
+      // Solo actualizamos si el partido ya empezó (en vivo) o terminó, y tiene marcador
+      if (!isLive && !isFinished) continue
+      if (!hasScore) continue
+
       let scorers = null
-      const goals1 = (match.goals1 || []).map(g => `${g.name} ${g.minute}'`)
-      const goals2 = (match.goals2 || []).map(g => `${g.name} ${g.minute}'`)
-      const allScorers = [...goals1, ...goals2]
+      const parseScorers = (raw) => {
+        if (!raw || raw === 'null') return []
+        try {
+          const arr = typeof raw === 'string' ? JSON.parse(raw) : raw
+          if (!Array.isArray(arr)) return []
+          return arr.map(g => `${g.name || g.player || '?'} ${g.minute || ''}'`.trim())
+        } catch {
+          return []
+        }
+      }
+      const homeScorers = parseScorers(game.home_scorers)
+      const awayScorers = parseScorers(game.away_scorers)
+      const allScorers = [...homeScorers, ...awayScorers]
       if (allScorers.length) scorers = allScorers.join(', ')
 
       const { error } = await supabase.from('results').upsert(
         {
           match_id: localMatch.id,
-          home_score: homeGoals,
-          away_score: awayGoals,
+          home_score: parseInt(game.home_score) || 0,
+          away_score: parseInt(game.away_score) || 0,
           scorers,
+          live_status: isFinished ? null : (isLive ? game.time_elapsed : null),
         },
         { onConflict: 'match_id' }
       )
@@ -129,13 +161,15 @@ export default async function handler(req, res) {
         errors.push({ match_id: localMatch.id, error: error.message })
       } else {
         updated++
+        if (isLive) liveCount++
       }
     }
 
     return res.status(200).json({
       ok: true,
-      matchesFromSource: allMatches.length,
+      gamesFromSource: games.length,
       updated,
+      liveNow: liveCount,
       errors,
       timestamp: new Date().toISOString(),
     })

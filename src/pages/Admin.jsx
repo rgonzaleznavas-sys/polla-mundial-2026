@@ -40,7 +40,7 @@ export default function Admin() {
   }, [])
 
   async function loadResults() {
-    const { data } = await supabase.from('results').select('match_id, home_score, away_score, scorers')
+    const { data } = await supabase.from('results').select('match_id, home_score, away_score, scorers, live_status')
     const rMap = {}
     ;(data || []).forEach(r => { rMap[r.match_id] = { home_score: r.home_score, away_score: r.away_score, scorers: r.scorers || '' } })
     setResults(rMap)

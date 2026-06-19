@@ -46,6 +46,17 @@ export default function Leaderboard() {
     return () => { supabase.removeChannel(channel) }
   }, [loadAll])
 
+  // Auto-sync: llama a /api/sync-results cada 20s mientras esta pantalla esté abierta,
+  // para traer resultados nuevos desde la fuente externa sin que el admin tenga que apretar el botón
+  useEffect(() => {
+    const interval = setInterval(() => {
+      fetch('/api/sync-results', {
+        headers: { Authorization: `Bearer ${import.meta.env.VITE_CRON_SECRET || ''}` },
+      }).catch(() => {})
+    }, 20000)
+    return () => clearInterval(interval)
+  }, [])
+
   function flashLive() {
     setLiveFlash(true)
     setTimeout(() => setLiveFlash(false), 2000)

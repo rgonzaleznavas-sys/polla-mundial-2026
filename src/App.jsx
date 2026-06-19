@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react'
 import Register from './pages/Register.jsx'
 import Picks from './pages/Picks.jsx'
 import Leaderboard from './pages/Leaderboard.jsx'
+import Results from './pages/Results.jsx'
 import Admin from './pages/Admin.jsx'
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin2026'
@@ -62,6 +63,7 @@ export default function App() {
       <div style={{ display: 'flex', gap: 6, marginBottom: '1.25rem', borderBottom: '1px solid var(--c-border)', paddingBottom: 0 }}>
         {[
           { key: 'leaderboard', label: '🏆 Tabla' },
+          { key: 'results', label: '⚽ Resultados' },
           { key: 'picks', label: '📝 Pronósticos' },
           ...(adminMode ? [{ key: 'admin', label: '🔧 Admin' }] : []),
         ].map(({ key, label }) => (
@@ -99,6 +101,7 @@ export default function App() {
       )}
 
       {view === 'leaderboard' && <Leaderboard />}
+      {view === 'results' && <Results />}
       {view === 'picks' && (
         player
           ? <Picks player={player} />

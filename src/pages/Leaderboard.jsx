@@ -129,9 +129,10 @@ export default function Leaderboard() {
                 </div>
                 <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
                   {m.away} <Flag team={m.away} size={16} />
+                </div>
               </div>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       )}
 

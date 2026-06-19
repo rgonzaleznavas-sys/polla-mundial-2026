@@ -91,11 +91,8 @@ export default function Leaderboard() {
 
   const medals = ['🥇', '🥈', '🥉']
 
-  // Últimos 3 resultados para mostrar resumen "en vivo"
-  const recentResults = MATCHES
-    .filter(m => results[m.id])
-    .sort((a, b) => new Date(b.kickoff) - new Date(a.kickoff))
-    .slice(0, 3)
+  // Solo partidos en vivo ahora mismo
+  const liveMatches = MATCHES.filter(m => results[m.id]?.live_status)
 
   return (
     <div>
@@ -107,26 +104,31 @@ export default function Leaderboard() {
         <span className="badge badge-group">{resultedCount}/72 resultados</span>
       </div>
 
-      {recentResults.length > 0 && (
-        <div className="card" style={{ marginBottom: '1rem', background: 'var(--c-bg)' }}>
-          <div style={{ fontSize: 11, color: 'var(--c-text-3)', marginBottom: 8, textTransform: 'uppercase', letterSpacing: '.04em', display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--c-green)', display: 'inline-block' }}></span>
-            Últimos resultados
+      {liveMatches.length > 0 && (
+        <div style={{ marginBottom: '1rem' }}>
+          <div style={{
+            fontSize: 11, fontWeight: 700, color: '#fff',
+            background: 'var(--c-red)', padding: '6px 12px', borderRadius: '8px 8px 0 0',
+            display: 'flex', alignItems: 'center', gap: 6, textTransform: 'uppercase', letterSpacing: '.04em',
+          }}>
+            <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#fff', display: 'inline-block' }}></span>
+            En vivo ahora
           </div>
-          {recentResults.map((m, idx) => (
-            <div key={m.id} style={{
-              display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-              padding: '6px 0',
-              borderTop: idx > 0 ? '1px solid var(--c-border)' : 'none',
-            }}>
-              <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
-                <Flag team={m.home} size={16} /> {m.home}
-              </div>
-              <div style={{ fontSize: 14, fontWeight: 700, padding: '0 8px' }}>
-                {results[m.id].home_score} – {results[m.id].away_score}
-              </div>
-              <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
-                {m.away} <Flag team={m.away} size={16} />
+          <div className="card" style={{ borderRadius: '0 0 12px 12px' }}>
+            {liveMatches.map((m, idx) => (
+              <div key={m.id} style={{
+                display: 'flex', alignItems: 'center', justifyContent: 'space-between',
+                padding: '6px 0',
+                borderTop: idx > 0 ? '1px solid var(--c-border)' : 'none',
+              }}>
+                <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  <Flag team={m.home} size={16} /> {m.home}
+                </div>
+                <div style={{ fontSize: 14, fontWeight: 700, padding: '2px 10px', background: 'var(--c-red-bg)', borderRadius: 6 }}>
+                  {results[m.id].home_score} – {results[m.id].away_score}
+                </div>
+                <div style={{ fontSize: 13, fontWeight: 500, display: 'flex', alignItems: 'center', gap: 5 }}>
+                  {m.away} <Flag team={m.away} size={16} />
               </div>
             </div>
           ))}

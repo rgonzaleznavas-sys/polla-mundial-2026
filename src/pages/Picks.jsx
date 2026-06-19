@@ -6,24 +6,35 @@ import Flag from '../components/Flag'
 export default function Picks({ player }) {
   const [picks, setPicks] = useState({})
   const [results, setResults] = useState({})
+  const [allPicks, setAllPicks] = useState([])
+  const [players, setPlayers] = useState([])
   const [saving, setSaving] = useState({})
   const [loaded, setLoaded] = useState(false)
+  const [expanded, setExpanded] = useState(null)
 
   const loadData = useCallback(async () => {
-    const [{ data: picksData }, { data: resultsData }] = await Promise.all([
+    const [{ data: picksData }, { data: resultsData }, { data: allPicksData }, { data: playersData }] = await Promise.all([
       supabase.from('picks').select('match_id, home_score, away_score').eq('player_id', player.id),
-      supabase.from('results').select('match_id, home_score, away_score'),
+      supabase.from('results').select('match_id, home_score, away_score, live_status'),
+      supabase.from('picks').select('player_id, match_id, home_score, away_score'),
+      supabase.from('players').select('id, name'),
     ])
     const pMap = {}
     ;(picksData || []).forEach(p => { pMap[p.match_id] = { home_score: p.home_score, away_score: p.away_score } })
     const rMap = {}
-    ;(resultsData || []).forEach(r => { rMap[r.match_id] = { home_score: r.home_score, away_score: r.away_score } })
+    ;(resultsData || []).forEach(r => { rMap[r.match_id] = { home_score: r.home_score, away_score: r.away_score, live_status: r.live_status } })
     setPicks(pMap)
     setResults(rMap)
+    setAllPicks(allPicksData || [])
+    setPlayers(playersData || [])
     setLoaded(true)
   }, [player.id])
 
   useEffect(() => { loadData() }, [loadData])
+
+  function playerName(id) {
+    return players.find(p => p.id === id)?.name || '?'
+  }
 
   async function savePick(matchId, homeScore, awayScore) {
     setSaving(s => ({ ...s, [matchId]: true }))
@@ -128,6 +139,45 @@ export default function Picks({ player }) {
                       {saving[m.id] && <span style={{ fontSize: 11, color: 'var(--c-text-3)' }}>💾</span>}
                     </div>
                   </div>
+
+                  {!open && (() => {
+                    const others = allPicks.filter(p => p.match_id === m.id && p.player_id !== player.id)
+                    if (!others.length) return null
+                    const isExpanded = expanded === m.id
+                    return (
+                      <div style={{ marginTop: 8 }}>
+                        <button
+                          onClick={() => setExpanded(isExpanded ? null : m.id)}
+                          style={{ fontSize: 11, padding: '4px 10px' }}
+                        >
+                          {isExpanded ? '▲ Ocultar otros pronósticos' : `▼ Ver otros pronósticos (${others.length})`}
+                        </button>
+                        {isExpanded && (
+                          <div style={{ marginTop: 8, borderTop: '1px solid var(--c-border)', paddingTop: 8 }}>
+                            {others
+                              .slice()
+                              .sort((a, b) => (result ? calcPoints(b, result) - calcPoints(a, result) : 0))
+                              .map(p => {
+                                const pts2 = result ? calcPoints(p, result) : null
+                                return (
+                                  <div key={p.player_id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', fontSize: 12, padding: '4px 4px' }}>
+                                    <span style={{ color: 'var(--c-text-2)' }}>{playerName(p.player_id)}</span>
+                                    <span style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+                                      <span style={{ fontWeight: 600 }}>{p.home_score}–{p.away_score}</span>
+                                      {pts2 !== null && (
+                                        <span className={`badge ${pts2 >= 3 ? 'badge-exact' : pts2 === 1 ? 'badge-winner' : 'badge-miss'}`} style={{ fontSize: 10 }}>
+                                          {pts2 >= 3 ? `+${pts2}` : pts2 === 1 ? '+1' : '0'}
+                                        </span>
+                                      )}
+                                    </span>
+                                  </div>
+                                )
+                              })}
+                          </div>
+                        )}
+                      </div>
+                    )
+                  })()}
                 </div>
               )
             })}

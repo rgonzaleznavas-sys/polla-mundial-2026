@@ -1,16 +1,21 @@
 // /api/sync-results.js
-// Consulta API-Football por los partidos del Mundial 2026 y actualiza Supabase
-// Se ejecuta automáticamente vía Vercel Cron (ver vercel.json)
+// Consulta el dataset público y gratuito de openfootball/worldcup.json
+// (no requiere API key) y actualiza Supabase con los resultados reales.
+// Se ejecuta automáticamente vía Vercel Cron, o manualmente desde el botón
+// "Actualizar ahora" en el panel Admin.
 
 import { createClient } from '@supabase/supabase-js'
 
-// Mapeo de nombres de equipo de API-Football -> nombres usados en la app
+const WORLDCUP_JSON_URL = 'https://raw.githubusercontent.com/openfootball/worldcup.json/master/2026/worldcup.json'
+
+// Mapeo de nombres de equipo del dataset (en inglés) -> nombres usados en la app
 const TEAM_NAME_MAP = {
   'Mexico': 'México',
   'South Africa': 'Sudáfrica',
   'South Korea': 'Corea del Sur',
   'Czech Republic': 'Chequia',
   'Canada': 'Canadá',
+  'Bosnia & Herzegovina': 'Bosnia & Herz.',
   'Bosnia and Herzegovina': 'Bosnia & Herz.',
   'USA': 'Estados Unidos',
   'United States': 'Estados Unidos',
@@ -60,79 +65,55 @@ const TEAM_NAME_MAP = {
   'Colombia': 'Colombia',
 }
 
-function normalizeTeam(apiName) {
-  return TEAM_NAME_MAP[apiName] || apiName
+function normalizeTeam(name) {
+  if (!name) return name
+  return TEAM_NAME_MAP[name] || name
 }
 
 export default async function handler(req, res) {
-  // Protección simple: solo Vercel Cron o llamadas con el secret pueden ejecutar esto
   const authHeader = req.headers['authorization']
-  const validSecret = process.env.CRON_SECRET || process.env.VITE_CRON_SECRET
-  if (validSecret && authHeader !== `Bearer ${validSecret}`) {
+  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
     return res.status(401).json({ error: 'Unauthorized' })
   }
 
-  const apiKey = process.env.API_FOOTBALL_KEY
   const supabaseUrl = process.env.VITE_SUPABASE_URL
   const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY
 
-  if (!apiKey || !supabaseUrl || !supabaseServiceKey) {
+  if (!supabaseUrl || !supabaseServiceKey) {
     return res.status(500).json({ error: 'Missing environment variables' })
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
   try {
-    // Traer fixtures del Mundial 2026 (league=1, season=2026) desde API-Football
-    const apiRes = await fetch(
-      'https://v3.football.api-sports.io/fixtures?league=1&season=2026',
-      {
-        headers: {
-          'x-apisports-key': apiKey,
-        },
-      }
-    )
-
-    if (!apiRes.ok) {
-      const text = await apiRes.text()
-      return res.status(502).json({ error: 'API-Football request failed', detail: text })
+    const dataRes = await fetch(WORLDCUP_JSON_URL)
+    if (!dataRes.ok) {
+      const text = await dataRes.text()
+      return res.status(502).json({ error: 'openfootball request failed', detail: text })
     }
+    const data = await dataRes.json()
+    const allMatches = data.matches || []
 
-    const apiData = await apiRes.json()
-    const fixtures = apiData.response || []
-
-    // Traer nuestros partidos locales (los 72 de fase de grupos) para hacer match por equipos
     const { MATCHES } = await import('../src/lib/matches.js')
 
     let updated = 0
     const errors = []
 
-    for (const fixture of fixtures) {
-      const homeApi = normalizeTeam(fixture.teams?.home?.name)
-      const awayApi = normalizeTeam(fixture.teams?.away?.name)
-      const status = fixture.fixture?.status?.short // 'FT' = finalizado, 'NS' = no iniciado, '1H','2H', etc = en vivo
-      const homeGoals = fixture.goals?.home
-      const awayGoals = fixture.goals?.away
+    for (const match of allMatches) {
+      if (!match.score || !match.score.ft) continue
 
-      // Solo nos interesan partidos con marcador disponible (en vivo o finalizados)
-      if (homeGoals === null || awayGoals === null) continue
+      const homeApi = normalizeTeam(match.team1)
+      const awayApi = normalizeTeam(match.team2)
+      const [homeGoals, awayGoals] = match.score.ft
 
-      // Buscar el match_id local correspondiente por nombres de equipo
-      const localMatch = MATCHES.find(
-        m => m.home === homeApi && m.away === awayApi
-      )
+      const localMatch = MATCHES.find(m => m.home === homeApi && m.away === awayApi)
       if (!localMatch) continue
 
-      // Armar texto de goleadores si hay eventos disponibles
       let scorers = null
-      if (fixture.events) {
-        const goals = fixture.events.filter(e => e.type === 'Goal')
-        if (goals.length) {
-          scorers = goals
-            .map(g => `${g.player?.name || '?'} ${g.time?.elapsed}'${g.time?.extra ? '+' + g.time.extra : ''}`)
-            .join(', ')
-        }
-      }
+      const goals1 = (match.goals1 || []).map(g => `${g.name} ${g.minute}'`)
+      const goals2 = (match.goals2 || []).map(g => `${g.name} ${g.minute}'`)
+      const allScorers = [...goals1, ...goals2]
+      if (allScorers.length) scorers = allScorers.join(', ')
 
       const { error } = await supabase.from('results').upsert(
         {
@@ -153,7 +134,7 @@ export default async function handler(req, res) {
 
     return res.status(200).json({
       ok: true,
-      fixturesFromApi: fixtures.length,
+      matchesFromSource: allMatches.length,
       updated,
       errors,
       timestamp: new Date().toISOString(),

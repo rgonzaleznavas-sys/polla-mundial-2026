@@ -13,7 +13,6 @@ export default function Register({ onReady }) {
     setLoading(true)
     setError('')
 
-    // Check if player already exists
     const { data: existing } = await supabase
       .from('players')
       .select('id, name')
@@ -26,7 +25,6 @@ export default function Register({ onReady }) {
       return
     }
 
-    // Create new player
     const { data, error: err } = await supabase
       .from('players')
       .insert({ name: trimmed })

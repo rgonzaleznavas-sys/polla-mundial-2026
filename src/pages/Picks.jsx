@@ -3,8 +3,8 @@ import { supabase } from '../lib/supabase'
 import { MATCHES, isOpen, formatKickoff, calcPoints } from '../lib/matches'
 
 export default function Picks({ player }) {
-  const [picks, setPicks] = useState({})    // { matchId: { home_score, away_score } }
-  const [results, setResults] = useState({}) // { matchId: { home_score, away_score } }
+  const [picks, setPicks] = useState({})
+  const [results, setResults] = useState({})
   const [saving, setSaving] = useState({})
   const [loaded, setLoaded] = useState(false)
 
@@ -48,7 +48,6 @@ export default function Picks({ player }) {
 
   if (!loaded) return <p style={{ color: 'var(--c-text-2)', padding: '1rem 0' }}>Cargando pronósticos...</p>
 
-  // Group matches by date
   const byDate = {}
   MATCHES.forEach(m => {
     const date = m.kickoff.slice(0, 10)
@@ -107,12 +106,12 @@ export default function Picks({ player }) {
                     <span style={{ flex: 1, fontSize: 14, fontWeight: 500 }}>{m.away}</span>
                   </div>
                   <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginTop: 6 }}>
-                    <div style={{ display: 'flex', gap: 6, alignItems: 'center' }}>
+                    <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
                       <span className={`badge badge-group`}>Grupo {m.group}</span>
                       <span className={`badge ${open ? 'badge-open' : 'badge-closed'}`}>
                         {open ? '🟢 Abierto' : '🔒 Cerrado'}
                       </span>
-                      <span style={{ fontSize: 11, color: 'var(--c-text-3)' }}>{formatKickoff(m.kickoff)}</span>
+                      <span style={{ fontSize: 11, color: 'var(--c-text-3)' }}>{m.stadium} · {formatKickoff(m.kickoff)}</span>
                     </div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
                       {result && (

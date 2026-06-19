@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { supabase } from '../lib/supabase'
 import { MATCHES, calcPoints } from '../lib/matches'
 
@@ -7,23 +7,49 @@ export default function Leaderboard() {
   const [picks, setPicks] = useState([])
   const [results, setResults] = useState({})
   const [loading, setLoading] = useState(true)
+  const [liveFlash, setLiveFlash] = useState(false)
 
-  useEffect(() => {
-    async function load() {
-      const [{ data: pls }, { data: pks }, { data: res }] = await Promise.all([
-        supabase.from('players').select('id, name').order('created_at'),
-        supabase.from('picks').select('player_id, match_id, home_score, away_score'),
-        supabase.from('results').select('match_id, home_score, away_score'),
-      ])
-      setPlayers(pls || [])
-      setPicks(pks || [])
-      const rMap = {}
-      ;(res || []).forEach(r => { rMap[r.match_id] = r })
-      setResults(rMap)
-      setLoading(false)
-    }
-    load()
+  const loadAll = useCallback(async (showLoading = true) => {
+    if (showLoading) setLoading(true)
+    const [{ data: pls }, { data: pks }, { data: res }] = await Promise.all([
+      supabase.from('players').select('id, name').order('created_at'),
+      supabase.from('picks').select('player_id, match_id, home_score, away_score'),
+      supabase.from('results').select('match_id, home_score, away_score, scorers'),
+    ])
+    setPlayers(pls || [])
+    setPicks(pks || [])
+    const rMap = {}
+    ;(res || []).forEach(r => { rMap[r.match_id] = r })
+    setResults(rMap)
+    setLoading(false)
   }, [])
+
+  useEffect(() => { loadAll() }, [loadAll])
+
+  // Realtime: refresca automáticamente cuando cambian resultados, picks o jugadores
+  useEffect(() => {
+    const channel = supabase
+      .channel('polla-realtime')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'results' }, () => {
+        loadAll(false)
+        flashLive()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'players' }, () => {
+        loadAll(false)
+        flashLive()
+      })
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'picks' }, () => {
+        loadAll(false)
+      })
+      .subscribe()
+
+    return () => { supabase.removeChannel(channel) }
+  }, [loadAll])
+
+  function flashLive() {
+    setLiveFlash(true)
+    setTimeout(() => setLiveFlash(false), 2000)
+  }
 
   if (loading) return <p style={{ color: 'var(--c-text-2)', padding: '1rem 0' }}>Cargando tabla...</p>
   if (!players.length) return (
@@ -34,7 +60,6 @@ export default function Leaderboard() {
 
   const resultedCount = Object.keys(results).length
 
-  // Compute scores per player
   const ranked = players.map(p => {
     const myPicks = picks.filter(pk => pk.player_id === p.id)
     let pts = 0, exact = 0, winner = 0, miss = 0, pending = 0
@@ -54,12 +79,37 @@ export default function Leaderboard() {
 
   const medals = ['🥇', '🥈', '🥉']
 
+  // Último resultado con goleadores para mostrar como "último marcador"
+  const lastResultMatch = MATCHES
+    .filter(m => results[m.id])
+    .sort((a, b) => new Date(b.kickoff) - new Date(a.kickoff))[0]
+
   return (
     <div>
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1rem' }}>
-        <p style={{ fontSize: 13, color: 'var(--c-text-2)' }}>{players.length} participantes</p>
+        <p style={{ fontSize: 13, color: 'var(--c-text-2)' }}>
+          {players.length} participantes
+          {liveFlash && <span style={{ marginLeft: 8, color: 'var(--c-green)', fontWeight: 600 }}>● actualizado</span>}
+        </p>
         <span className="badge badge-group">{resultedCount}/72 resultados</span>
       </div>
+
+      {lastResultMatch && (
+        <div className="card" style={{ marginBottom: '1rem', background: 'var(--c-bg)' }}>
+          <div style={{ fontSize: 11, color: 'var(--c-text-3)', marginBottom: 4, textTransform: 'uppercase', letterSpacing: '.04em' }}>
+            Último resultado
+          </div>
+          <div style={{ fontSize: 14, fontWeight: 600 }}>
+            {lastResultMatch.home} {results[lastResultMatch.id].home_score} – {results[lastResultMatch.id].away_score} {lastResultMatch.away}
+          </div>
+          {results[lastResultMatch.id].scorers && (
+            <div style={{ fontSize: 12, color: 'var(--c-text-2)', marginTop: 2 }}>
+              ⚽ {results[lastResultMatch.id].scorers}
+            </div>
+          )}
+          <div style={{ fontSize: 11, color: 'var(--c-text-3)', marginTop: 2 }}>{lastResultMatch.stadium}</div>
+        </div>
+      )}
 
       {ranked.map((p, i) => (
         <div key={p.id} className="card" style={{ marginBottom: 8, display: 'flex', alignItems: 'center', gap: 12 }}>
@@ -83,7 +133,7 @@ export default function Leaderboard() {
       ))}
 
       <div style={{ fontSize: 12, color: 'var(--c-text-3)', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid var(--c-border)' }}>
-        ✅ exacto = 3pts &nbsp;·&nbsp; empate exacto = 5pts &nbsp;·&nbsp; ↗ ganador = 1pt
+        ✅ exacto = 3pts &nbsp;·&nbsp; empate exacto = 5pts &nbsp;·&nbsp; ↗ ganador = 1pt &nbsp;·&nbsp; 🔴 en vivo
       </div>
     </div>
   )

@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react'
-import { supabase } from './lib/supabase'
 import Register from './pages/Register.jsx'
 import Picks from './pages/Picks.jsx'
 import Leaderboard from './pages/Leaderboard.jsx'
@@ -8,8 +7,8 @@ import Admin from './pages/Admin.jsx'
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin2026'
 
 export default function App() {
-  const [view, setView] = useState('leaderboard') // leaderboard | picks | admin
-  const [player, setPlayer] = useState(null) // { id, name }
+  const [view, setView] = useState('leaderboard')
+  const [player, setPlayer] = useState(null)
   const [adminMode, setAdminMode] = useState(false)
   const [adminInput, setAdminInput] = useState('')
   const [adminError, setAdminError] = useState('')
@@ -42,7 +41,6 @@ export default function App() {
 
   return (
     <div style={{ maxWidth: 640, margin: '0 auto', padding: '1rem' }}>
-      {/* Header */}
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 600 }}>⚽ Polla Mundial 2026</h1>
@@ -61,7 +59,6 @@ export default function App() {
         )}
       </div>
 
-      {/* Nav */}
       <div style={{ display: 'flex', gap: 6, marginBottom: '1.25rem', borderBottom: '1px solid var(--c-border)', paddingBottom: 0 }}>
         {[
           { key: 'leaderboard', label: '🏆 Tabla' },
@@ -85,7 +82,6 @@ export default function App() {
         )}
       </div>
 
-      {/* Admin login inline */}
       {showAdminLogin && !adminMode && (
         <div className="card" style={{ marginBottom: '1rem' }}>
           <form onSubmit={handleAdminLogin} style={{ display: 'flex', gap: 8, alignItems: 'center' }}>
@@ -102,7 +98,6 @@ export default function App() {
         </div>
       )}
 
-      {/* Views */}
       {view === 'leaderboard' && <Leaderboard />}
       {view === 'picks' && (
         player

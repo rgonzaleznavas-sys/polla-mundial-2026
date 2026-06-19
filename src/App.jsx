@@ -3,6 +3,7 @@ import Register from './pages/Register.jsx'
 import Picks from './pages/Picks.jsx'
 import Leaderboard from './pages/Leaderboard.jsx'
 import Results from './pages/Results.jsx'
+import Standings from './pages/Standings.jsx'
 import Admin from './pages/Admin.jsx'
 
 const ADMIN_PASSWORD = import.meta.env.VITE_ADMIN_PASSWORD || 'admin2026'
@@ -79,6 +80,7 @@ export default function App() {
         {[
           { key: 'leaderboard', label: '🏆 Tabla' },
           { key: 'results', label: '⚽ Resultados' },
+          { key: 'standings', label: '📊 Posiciones' },
           { key: 'picks', label: '📝 Pronósticos' },
           ...(adminMode ? [{ key: 'admin', label: '🔧 Admin' }] : []),
         ].map(({ key, label }) => (
@@ -111,6 +113,7 @@ export default function App() {
 
       {view === 'leaderboard' && <Leaderboard />}
       {view === 'results' && <Results />}
+      {view === 'standings' && <Standings />}
       {view === 'picks' && (
         player
           ? <Picks player={player} />

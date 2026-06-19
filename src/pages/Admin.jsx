@@ -33,33 +33,6 @@ export default function Admin() {
     }
     setSyncing(false)
   }
-  const [syncing, setSyncing] = useState(false)
-  const [syncResult, setSyncResult] = useState(null)
-  const [syncError, setSyncError] = useState('')
-
-  async function runSync() {
-    setSyncing(true)
-    setSyncError('')
-    try {
-      const res = await fetch('/api/sync-results', {
-        headers: {
-          'Authorization': `Bearer ${import.meta.env.VITE_CRON_SECRET || ''}`,
-        },
-      })
-      const data = await res.json()
-      if (!res.ok) {
-        setSyncError(data.error || 'Error al actualizar')
-      } else {
-        setSyncResult(data)
-        if (data.updated > 0) {
-          loadResults()
-        }
-      }
-    } catch (e) {
-      setSyncError('No se pudo conectar con el servidor')
-    }
-    setSyncing(false)
-  }
 
   useEffect(() => {
     loadResults()
@@ -164,30 +137,6 @@ export default function Admin() {
           {syncMsg && (
             <div className="card" style={{ marginBottom: '1rem', fontSize: 13, background: syncMsg.ok ? 'var(--c-green-bg)' : 'var(--c-red-bg)', color: syncMsg.ok ? 'var(--c-green)' : 'var(--c-red)', border: 'none' }}>
               {syncMsg.text}
-            </div>
-          )}
-
-          <div className="card" style={{ marginBottom: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ fontSize: 13, fontWeight: 600 }}>Actualización automática</div>
-              <div style={{ fontSize: 11, color: 'var(--c-text-3)' }}>
-                {syncResult
-                  ? `Última vez: ${syncResult.updated} partidos actualizados (${new Date(syncResult.timestamp).toLocaleTimeString('es-PA')})`
-                  : 'Trae los resultados más recientes desde API-Football'}
-              </div>
-            </div>
-            <button
-              onClick={runSync}
-              disabled={syncing}
-              className="primary"
-              style={{ fontSize: 12, padding: '6px 14px', whiteSpace: 'nowrap' }}
-            >
-              {syncing ? 'Actualizando...' : '🔄 Actualizar ahora'}
-            </button>
-          </div>
-          {syncError && (
-            <div className="card" style={{ marginBottom: '1rem', borderColor: 'var(--c-red)', background: 'var(--c-red-bg)' }}>
-              <p style={{ fontSize: 12, color: 'var(--c-red)' }}>{syncError}</p>
             </div>
           )}
 

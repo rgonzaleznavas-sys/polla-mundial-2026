@@ -17,6 +17,49 @@ export default function App() {
   const [showAdminLogin, setShowAdminLogin] = useState(false)
   const [tapCount, setTapCount] = useState(0)
   const [tapTimer, setTapTimer] = useState(null)
+  const [installPrompt, setInstallPrompt] = useState(null)
+  const [showInstallBanner, setShowInstallBanner] = useState(false)
+  const [isIOS, setIsIOS] = useState(false)
+
+  useEffect(() => {
+    // Detect iOS (Safari doesn't support beforeinstallprompt, needs manual instructions)
+    const ua = window.navigator.userAgent
+    const ios = /iPad|iPhone|iPod/.test(ua) && !window.MSStream
+    setIsIOS(ios)
+
+    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone
+    const dismissed = localStorage.getItem('polla_install_dismissed')
+
+    if (!isStandalone && !dismissed) {
+      if (ios) {
+        setShowInstallBanner(true)
+      }
+    }
+
+    function handleBeforeInstall(e) {
+      e.preventDefault()
+      setInstallPrompt(e)
+      if (!isStandalone && !dismissed) setShowInstallBanner(true)
+    }
+    window.addEventListener('beforeinstallprompt', handleBeforeInstall)
+    return () => window.removeEventListener('beforeinstallprompt', handleBeforeInstall)
+  }, [])
+
+  async function handleInstallClick() {
+    if (installPrompt) {
+      installPrompt.prompt()
+      const { outcome } = await installPrompt.userChoice
+      if (outcome === 'accepted') {
+        setShowInstallBanner(false)
+      }
+      setInstallPrompt(null)
+    }
+  }
+
+  function dismissInstallBanner() {
+    setShowInstallBanner(false)
+    localStorage.setItem('polla_install_dismissed', '1')
+  }
 
   function handleTitleTap() {
     const newCount = tapCount + 1
@@ -75,6 +118,31 @@ export default function App() {
           </div>
         )}
       </div>
+
+      {showInstallBanner && (
+        <div className="card" style={{
+          marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10,
+          background: 'var(--c-gold-bg)', borderColor: 'var(--c-gold)',
+        }}>
+          <img src="/icon-192.png" alt="" style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0 }} />
+          <div style={{ flex: 1 }}>
+            <div style={{ fontSize: 13, fontWeight: 600 }}>Instala la app</div>
+            {isIOS ? (
+              <div style={{ fontSize: 11, color: 'var(--c-text-2)' }}>
+                Toca <strong>Compartir</strong> (⬆️ abajo) → <strong>"Agregar a pantalla de inicio"</strong>
+              </div>
+            ) : (
+              <div style={{ fontSize: 11, color: 'var(--c-text-2)' }}>Accede más rápido, como una app normal</div>
+            )}
+          </div>
+          {!isIOS && (
+            <button onClick={handleInstallClick} className="primary" style={{ fontSize: 12, padding: '6px 12px', whiteSpace: 'nowrap' }}>
+              Instalar
+            </button>
+          )}
+          <button onClick={dismissInstallBanner} style={{ fontSize: 16, padding: '4px 8px', border: 'none', background: 'none', color: 'var(--c-text-3)' }}>×</button>
+        </div>
+      )}
 
       <div style={{ display: 'flex', gap: 6, marginBottom: '1.25rem', borderBottom: '1px solid var(--c-border)', paddingBottom: 0 }}>
         {[

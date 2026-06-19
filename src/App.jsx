@@ -121,26 +121,25 @@ export default function App() {
 
       {showInstallBanner && (
         <div className="card" style={{
-          marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: 10,
+          marginBottom: '1rem',
           background: 'var(--c-gold-bg)', borderColor: 'var(--c-gold)',
         }}>
-          <img src="/icon-192.png" alt="" style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0 }} />
-          <div style={{ flex: 1 }}>
-            <div style={{ fontSize: 13, fontWeight: 600 }}>Instala la app</div>
-            {isIOS ? (
-              <div style={{ fontSize: 11, color: 'var(--c-text-2)' }}>
-                Toca <strong>Compartir</strong> (⬆️ abajo) → <strong>"Agregar a pantalla de inicio"</strong>
-              </div>
-            ) : (
-              <div style={{ fontSize: 11, color: 'var(--c-text-2)' }}>Accede más rápido, como una app normal</div>
-            )}
+          <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <img src="/icon-192.png" alt="" style={{ width: 40, height: 40, borderRadius: 10, flexShrink: 0 }} />
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: 13, fontWeight: 600 }}>Instala la app</div>
+              {isIOS ? (
+                <div style={{ fontSize: 11, color: 'var(--c-text-2)' }}>
+                  Toca <strong>Compartir</strong> (⬆️ abajo) → <strong>"Agregar a pantalla de inicio"</strong>
+                </div>
+              ) : (
+                <div style={{ fontSize: 11, color: 'var(--c-text-2)' }}>
+                  Toca los <strong>⋮ tres puntos</strong> arriba a la derecha de Chrome → <strong>"Instalar app"</strong>
+                </div>
+              )}
+            </div>
+            <button onClick={dismissInstallBanner} style={{ fontSize: 16, padding: '4px 8px', border: 'none', background: 'none', color: 'var(--c-text-3)' }}>×</button>
           </div>
-          {!isIOS && (
-            <button onClick={handleInstallClick} className="primary" style={{ fontSize: 12, padding: '6px 12px', whiteSpace: 'nowrap' }}>
-              Instalar
-            </button>
-          )}
-          <button onClick={dismissInstallBanner} style={{ fontSize: 16, padding: '4px 8px', border: 'none', background: 'none', color: 'var(--c-text-3)' }}>×</button>
         </div>
       )}
 

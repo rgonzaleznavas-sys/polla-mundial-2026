@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react'
+import { supabase } from './lib/supabase'
 import Register from './pages/Register.jsx'
 import Picks from './pages/Picks.jsx'
 import Leaderboard from './pages/Leaderboard.jsx'
@@ -77,7 +78,26 @@ export default function App() {
   useEffect(() => {
     const saved = localStorage.getItem('polla_player')
     if (saved) {
-      try { setPlayer(JSON.parse(saved)) } catch(e) {}
+      try {
+        const parsedPlayer = JSON.parse(saved)
+        // Verifica que el participante guardado siga existiendo (no haya sido borrado por el admin)
+        supabase
+          .from('players')
+          .select('id, name')
+          .eq('id', parsedPlayer.id)
+          .single()
+          .then(({ data, error }) => {
+            if (error || !data) {
+              // El participante fue borrado — limpia el storage para permitir registrarse de nuevo
+              localStorage.removeItem('polla_player')
+              setPlayer(null)
+            } else {
+              setPlayer(data)
+            }
+          })
+      } catch(e) {
+        localStorage.removeItem('polla_player')
+      }
     }
     // Genera un ID de dispositivo persistente para evitar múltiples registros
     let deviceId = localStorage.getItem('polla_device_id')

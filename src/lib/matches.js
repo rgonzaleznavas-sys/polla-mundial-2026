@@ -114,8 +114,13 @@ export function flagUrl(team, size = 24) {
   return `https://flagcdn.com/w${size}/${code}.png`
 }
 
-export function isOpen(match) {
-  return new Date() < new Date(match.kickoff)
+export function isOpen(match, result) {
+  // Cerrado si ya pasó la hora programada
+  const pastKickoff = new Date() >= new Date(match.kickoff)
+  // O si ya existe un resultado guardado (en vivo o terminado) — esto cubre
+  // el caso de partidos que arrancan antes de lo originalmente programado
+  const hasLiveOrFinalResult = result && result.home_score !== null && result.home_score !== undefined
+  return !pastKickoff && !hasLiveOrFinalResult
 }
 
 export function formatKickoff(kickoff) {

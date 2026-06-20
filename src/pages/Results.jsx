@@ -123,7 +123,7 @@ export default function Results() {
             }}>{label}</div>
             {matchesWithResults.map(m => {
               const r = results[m.id]
-              const closed = !isOpen(m)
+              const closed = !isOpen(m, r)
               const isExpanded = expanded === m.id
               const matchPicks = allPicks.filter(p => p.match_id === m.id)
               return (

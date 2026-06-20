@@ -74,7 +74,7 @@ export default function Picks({ player }) {
   })
 
   const openCount = MATCHES.filter(isOpen).length
-  const filledOpen = MATCHES.filter(m => isOpen(m) && picks[m.id]?.home_score !== null && picks[m.id]?.away_score !== null).length
+  const filledOpen = MATCHES.filter(m => isOpen(m, results[m.id]) && picks[m.id]?.home_score !== null && picks[m.id]?.away_score !== null).length
 
   return (
     <div>
@@ -96,9 +96,9 @@ export default function Picks({ player }) {
               borderBottom: '1px solid var(--c-border)'
             }}>{label}</div>
             {matches.map(m => {
-              const open = isOpen(m)
-              const pick = picks[m.id] || { home_score: null, away_score: null }
               const result = results[m.id]
+              const open = isOpen(m, result)
+              const pick = picks[m.id] || { home_score: null, away_score: null }
               const pts = result ? calcPoints(pick, result) : null
               return (
                 <div key={m.id} className="card" style={{ marginBottom: 6, opacity: !open && !result ? .65 : 1 }}>

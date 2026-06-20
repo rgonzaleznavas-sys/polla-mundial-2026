@@ -68,6 +68,7 @@ export default function Leaderboard() {
     const s = String(status).toLowerCase()
     if (s === 'halftime' || s === 'ht') return 'Medio tiempo'
     if (s === 'fulltime' || s === 'finished') return 'Final'
+    if (s === 'live' || s === 'inprogress' || s === 'in_progress') return '🔴 Jugando'
     if (/^\d+(\+\d+)?$/.test(s)) return `${s}'`
     return status
   }

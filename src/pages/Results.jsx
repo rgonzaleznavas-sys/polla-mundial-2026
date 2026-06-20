@@ -47,6 +47,7 @@ export default function Results() {
     const s = String(status).toLowerCase()
     if (s === 'halftime' || s === 'ht') return 'Medio tiempo'
     if (s === 'fulltime' || s === 'finished') return 'Final'
+    if (s === 'live' || s === 'inprogress' || s === 'in_progress') return '🔴 Jugando'
     if (/^\d+(\+\d+)?$/.test(s)) return `${s}'`
     return status
   }

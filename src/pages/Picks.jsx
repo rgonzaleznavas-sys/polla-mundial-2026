@@ -36,16 +36,22 @@ export default function Picks({ player }) {
     return players.find(p => p.id === id)?.name || '?'
   }
 
-  async function savePick(matchId, homeScore, awayScore) {
-    setSaving(s => ({ ...s, [matchId]: true }))
+  async function savePick(matchId, homeScore, awayScore, retries = 2) {
+    setSaving(s => ({ ...s, [matchId]: 'saving' }))
     const { error } = await supabase.from('picks').upsert(
       { player_id: player.id, match_id: matchId, home_score: homeScore, away_score: awayScore },
       { onConflict: 'player_id,match_id' }
     )
     if (!error) {
       setPicks(p => ({ ...p, [matchId]: { home_score: homeScore, away_score: awayScore } }))
+      setSaving(s => ({ ...s, [matchId]: 'saved' }))
+      setTimeout(() => setSaving(s => ({ ...s, [matchId]: false })), 1500)
+    } else if (retries > 0) {
+      // Reintenta automáticamente si falla (ej. problema de red momentáneo)
+      setTimeout(() => savePick(matchId, homeScore, awayScore, retries - 1), 800)
+    } else {
+      setSaving(s => ({ ...s, [matchId]: 'error' }))
     }
-    setSaving(s => ({ ...s, [matchId]: false }))
   }
 
   function handleScore(matchId, side, val) {
@@ -136,7 +142,14 @@ export default function Picks({ player }) {
                           {pts >= 3 ? `+${pts}pts ✅` : pts === 1 ? '+1pt ↗' : '0pts ❌'}
                         </span>
                       )}
-                      {saving[m.id] && <span style={{ fontSize: 11, color: 'var(--c-text-3)' }}>💾</span>}
+                      {saving[m.id] === 'saving' && <span style={{ fontSize: 11, color: 'var(--c-text-3)' }}>💾 Guardando...</span>}
+                      {saving[m.id] === 'saved' && <span style={{ fontSize: 11, color: 'var(--c-green)' }}>✓ Guardado</span>}
+                      {saving[m.id] === 'error' && (
+                        <button
+                          onClick={() => savePick(m.id, pick.home_score, pick.away_score)}
+                          style={{ fontSize: 11, padding: '2px 8px', color: 'var(--c-red)', borderColor: 'var(--c-red)' }}
+                        >⚠️ Error, toca para reintentar</button>
+                      )}
                     </div>
                   </div>
 
